@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciador de Orçamentos</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f2f2f2; }
+    label, select, input { display: block; margin: 10px 0; }
+    button { padding: 10px 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Gerar Orçamento</h1>
+
+  <label>Cliente:
+    <input type="text" id="cliente" />
+  </label>
+
+  <label>Produto:
+    <select id="produto"></select>
+  </label>
+
+  <label>Quantidade:
+    <input type="number" id="quantidade" min="1" value="1" />
+  </label>
+
+  <p>Total: R$ <span id="total">0.00</span></p>
+
+  <button onclick="enviarOrcamento()">Salvar Orçamento</button>
+
+  <script>
+    const apiURL_GET = 'https://script.google.com/macros/s/AKfycbzgwZ3LxrA3Musm5pZcmiUUCwWqmPJLitEGG3JqPNVyP1w9WM4fVSsAQpoWy-Bn_IT9/exec';  // Substitua pela URL do GET
+    const apiURL_POST = '1TXYOxaCUwy_zyzKUmmr932hwEW8LuKVZCB1QmDu72pA'; // Mesma URL (GET e POST)
+
+    let produtos = [];
+
+    async function carregarProdutos() {
+      const resp = await fetch(apiURL_GET);
+      const data = await resp.json();
+      produtos = data.slice(1); // remove cabeçalho
+      const select = document.getElementById('produto');
+      produtos.forEach(([nome, preco]) => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        opt.dataset.preco = preco;
+        opt.textContent = `${nome} - R$ ${preco}`;
+        select.appendChild(opt);
+      });
+      calcularTotal();
+    }
+
+    function calcularTotal() {
+      const select = document.getElementById('produto');
+      const preco = parseFloat(select.selectedOptions[0].dataset.preco);
+      const qtd = parseInt(document.getElementById('quantidade').value);
+      const total = preco * qtd;
+      document.getElementById('total').textContent = total.toFixed(2);
+    }
+
+    document.getElementById('produto').addEventListener('change', calcularTotal);
+    document.getElementById('quantidade').addEventListener('input', calcularTotal);
+
+    async function enviarOrcamento() {
+      const nomeCliente = document.getElementById('cliente').value;
+      const produto = document.getElementById('produto').value;
+      const quantidade = parseInt(document.getElementById('quantidade').value);
+      const preco = parseFloat(document.getElementById('produto').selectedOptions[0].dataset.preco);
+      const total = preco * quantidade;
+
+      const payload = {
+        nomeCliente,
+        produto,
+        quantidade,
+        total
+      };
+
+      const res = await fetch(apiURL_POST, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if ((await res.text()) === 'OK') {
+        alert('Orçamento salvo com sucesso!');
+        document.getElementById('cliente').value = '';
+      }
+    }
+
+    carregarProdutos();
+  </script>
+
+</body>
+</html>
