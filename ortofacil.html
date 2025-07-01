@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrcaFácil ERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f4f8;
+    }
+    header {
+      background: #0056b3;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .menu {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 20px 0;
+    }
+    .menu button {
+      padding: 10px 20px;
+      background: #003f88;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .menu button:hover {
+      background: #002c66;
+    }
+    section {
+      display: none;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    section.active {
+      display: block;
+    }
+    input, select, textarea {
+      width: 100%;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button.action {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button.action:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OrcaFácil ERP</h1>
+  </header>
+
+  <div class="menu">
+    <button onclick="mostrar('orcamentos')">🧾 Orçamentos</button>
+    <button onclick="mostrar('liberacao')">📦 Liberação de Materiais</button>
+    <button onclick="mostrar('romaneio')">🚚 Romaneio de Carga</button>
+  </div>
+
+  <section id="orcamentos">
+    <h2>Gerar Orçamento</h2>
+    <label>Cliente:</label>
+    <input type="text" id="cliente">
+    <label>Data:</label>
+    <input type="date" id="data">
+    <label>Produto:</label>
+    <input type="text" id="produto">
+    <label>Quantidade:</label>
+    <input type="number" id="quantidade">
+    <button class="action" onclick="salvarOrcamento()">Salvar Orçamento</button>
+    <pre id="retornoOrc"></pre>
+  </section>
+
+  <section id="liberacao">
+    <h2>Liberação de Materiais</h2>
+    <label>Número do Orçamento:</label>
+    <input type="text" id="numeroOrc">
+    <button class="action" onclick="buscarMateriais()">Buscar Materiais</button>
+    <pre id="retornoLib"></pre>
+  </section>
+
+  <section id="romaneio">
+    <h2>Romaneio de Carga</h2>
+    <label>Orçamento Nº:</label>
+    <input type="text" id="orcRef">
+    <label>Motorista:</label>
+    <input type="text" id="motorista">
+    <label>Placa do Veículo:</label>
+    <input type="text" id="placa">
+    <label>Destino:</label>
+    <input type="text" id="destino">
+    <button class="action" onclick="salvarRomaneio()">Salvar Romaneio</button>
+    <pre id="retornoRomaneio"></pre>
+  </section>
+
+  <script>
+    const webAppURL = "https://script.google.com/macros/library/d/16UyiBD7HiM1Xhh7mrabvrMinMsSnXwO_qQlNJwpQDTQ0BUPhlu3KRT6H/1";
+
+    function mostrar(id) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function salvarOrcamento() {
+      const dados = {
+        tipo: "salvar",
+        aba: "Orçamentos",
+        cliente: document.getElementById("cliente").value,
+        data: document.getElementById("data").value,
+        produtos: document.getElementById("produto").value,
+        total: 0,
+        status: "Pendente",
+        usuario: "admin"
+      };
+      fetch(webAppURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      })
+      .then(r => r.text())
+      .then(txt => document.getElementById("retornoOrc").textContent = txt)
+      .catch(err => alert("Erro ao salvar orçamento"));
+    }
+
+    function buscarMateriais() {
+      const numero = document.getElementById("numeroOrc").value;
+      fetch(`${webAppURL}?tipo=materiais&numero=${numero}`)
+      .then(r => r.json())
+      .then(d => document.getElementById("retornoLib").textContent = JSON.stringify(d, null, 2))
+      .catch(err => alert("Erro ao buscar materiais"));
+    }
+
+    function salvarRomaneio() {
+      const dados = {
+        tipo: "romaneio",
+        aba: "Romaneios",
+        orcamento: document.getElementById("orcRef").value,
+        motorista: document.getElementById("motorista").value,
+        placa: document.getElementById("placa").value,
+        destino: document.getElementById("destino").value,
+        data: new Date().toISOString().split("T")[0],
+        itens: "(Em desenvolvimento)"
+      };
+      fetch(webAppURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      })
+      .then(r => r.text())
+      .then(txt => document.getElementById("retornoRomaneio").textContent = txt)
+      .catch(err => alert("Erro ao salvar romaneio"));
+    }
+  </script>
+</body>
+</html>
